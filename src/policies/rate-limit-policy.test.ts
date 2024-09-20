@@ -54,14 +54,14 @@ Deno.test({
 });
 
 Deno.test({
-  name: "shadow ban Ips during ban_interval after exceeding rate limit",
+  name: "shadow ban Ips during banInterval after exceeding rate limit",
   fn: async () => {
     await removeDb();
 
     const opts = {
       max: 4,
       interval: 50,
-      ban_interval: 100,
+      banInterval: 100,
       databaseUrl: DATABASE_URL,
     };
 

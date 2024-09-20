@@ -7,7 +7,7 @@ interface RateLimit {
   /** How often (ms) to check whether `max` has been exceeded. Default: `60000` (1 minute). */
   interval?: number;
   /** How long (ms) to ban IPs that were rate-limited. Default: `0` (never). */
-  ban_interval?: number;
+  banInterval?: number;
   /** Max number of requests within the `interval` until the IP is rate-limited. Default: `10`. */
   max?: number;
   /** List of IP addresses to skip this policy. */
@@ -31,7 +31,7 @@ interface RateLimit {
 const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
   const {
     interval = 60000,
-    ban_interval = 0,
+    banInterval = 0,
     max = 10,
     whitelist = [],
     databaseUrl = "sqlite:///tmp/strfry-rate-limit-policy.sqlite3",
@@ -46,8 +46,8 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
     await db.set(msg.sourceInfo, count + 1, interval);
 
     if (count >= max) {
-      if (ban_interval > 0) {
-        await db.set(`${msg.sourceInfo}-banned`, true, ban_interval);
+      if (banInterval > 0) {
+        await db.set(`${msg.sourceInfo}-banned`, true, banInterval);
       }
 
       return {
@@ -58,13 +58,13 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
     }
   }
 
-  if (ban_interval > 0) {
+  if (banInterval > 0) {
     const db = new Keydb(databaseUrl);
-    const is_banned =
+    const isBanned =
       (await db.get<boolean>(`${msg.sourceInfo}-banned`)) ?? false;
 
-    if (is_banned) {
-      console.error(
+    if (isBanned) {
+      logError(
         `Banned rate-limited IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
       );
 
@@ -82,6 +82,11 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
     msg: "",
   };
 };
+
+function logError(logMessage: string) {
+  // We need line buffering to see the stderr
+  Deno.stderr.writeSync(new TextEncoder().encode(logMessage));
+}
 
 export default rateLimitPolicy;
 
