@@ -1,4 +1,5 @@
 import { Keydb } from "../deps.ts";
+import { log } from "../io.ts";
 
 import type { Policy } from "../types.ts";
 
@@ -48,6 +49,14 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
     if (count >= max) {
       if (banInterval > 0) {
         await db.set(`${msg.sourceInfo}-banned`, true, banInterval);
+
+        log(
+          `Banned and rate-limited IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
+        );
+      } else {
+        log(
+          `Rate-limited IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
+        );
       }
 
       return {
@@ -64,8 +73,8 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
       (await db.get<boolean>(`${msg.sourceInfo}-banned`)) ?? false;
 
     if (isBanned) {
-      logError(
-        `Banned rate-limited IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
+      log(
+        `Banned IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
       );
 
       return {
@@ -82,11 +91,6 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
     msg: "",
   };
 };
-
-function logError(logMessage: string) {
-  // We need line buffering to see the stderr
-  Deno.stderr.writeSync(new TextEncoder().encode(logMessage));
-}
 
 export default rateLimitPolicy;
 
