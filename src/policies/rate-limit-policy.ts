@@ -64,6 +64,10 @@ const rateLimitPolicy: Policy<RateLimit> = async (msg, opts = {}) => {
       (await db.get<boolean>(`${msg.sourceInfo}-banned`)) ?? false;
 
     if (is_banned) {
+      console.error(
+        `Banned rate-limited IP ${msg.sourceInfo}. Pubkey: ${msg.event.pubkey}, kind: ${msg.event.kind}, id ${msg.event.id}.`
+      );
+
       return {
         id: msg.event.id,
         action: "shadowReject",
