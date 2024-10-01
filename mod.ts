@@ -11,7 +11,7 @@ export { default as readOnlyPolicy } from './src/policies/read-only-policy.ts';
 export { default as regexPolicy } from './src/policies/regex-policy.ts';
 export { default as whitelistPolicy } from './src/policies/whitelist-policy.ts';
 
-export { readStdin, writeStdout } from './src/io.ts';
+export { readStdin, writeStdout, log } from './src/io.ts';
 export { default as pipeline, type PolicyTuple } from './src/pipeline.ts';
 
 export type { Event, InputMessage, IterablePubkeys, OutputMessage, Policy } from './src/types.ts';
