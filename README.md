@@ -14,7 +14,7 @@ To get up and running, you will need to install Deno on the same machine as strf
 
 ```sh
 sudo apt install -y unzip
-curl -fsSL https://deno.land/x/install/install.sh | sudo DENO_INSTALL=/usr/local sh
+curl -fsSL https://deno.land/install.sh | sh -s -- v1.46.3
 ```
 
 Create an entrypoint file somewhere and make it executable:
@@ -56,7 +56,7 @@ Finally, edit `strfry.conf` and enable the policy:
          # If non-empty, path to an executable script that implements the writePolicy plugin logic
 -        plugin = ""
 +        plugin = "/opt/strfry-policy.ts"
- 
+
          # Number of seconds to search backwards for lookback events when starting the writePolicy plugin (0 for no lookback)
          lookbackSeconds = 0
 ```
@@ -154,7 +154,7 @@ Once you're done, you can either upload the file somewhere online or directly to
    writeStdout,
  } from 'https://gitlab.com/soapbox-pub/strfry-policies/-/raw/develop/mod.ts';
 +import { americanPolicy } from 'https://gist.githubusercontent.com/alexgleason/5c2d084434fa0875397f44da198f4352/raw/3d3ce71c7ed9cef726f17c3a102c378b81760a45/american-policy.ts';
- 
+
  for await (const msg of readStdin()) {
    const result = await pipeline(msg, [
      [hellthreadPolicy, { limit: 100 }],
@@ -162,7 +162,7 @@ Once you're done, you can either upload the file somewhere online or directly to
      [rateLimitPolicy, { whitelist: ['127.0.0.1'] }],
 +    americanPolicy,
    ]);
- 
+
    writeStdout(result);
 ```
 
@@ -175,7 +175,7 @@ The `Policy<Opts>` type is a generic that accepts options of any type. With opts
 +++ b/american-policy.ts
 @@ -1,7 +1,11 @@
  import type { Policy } from 'https://gitlab.com/soapbox-pub/strfry-policies/-/raw/develop/mod.ts';
- 
+
 +interface American {
 +  withGrey?: boolean;
 +}
@@ -184,18 +184,18 @@ The `Policy<Opts>` type is a generic that accepts options of any type. With opts
 -const americanPolicy: Policy<void> = (msg) => {
 +const americanPolicy: Policy<American> = (msg, opts) => {
    const { content } = msg.event;
- 
+
    const words = [
 @@ -15,6 +19,10 @@
      'rumour',
    ];
- 
+
 +  if (opts?.withGrey) {
 +    words.push('grey');
 +  }
 +
    const isBritish = words.some((word) => content.toLowerCase().includes(word));
- 
+
    if (isBritish) {
 ```
 
